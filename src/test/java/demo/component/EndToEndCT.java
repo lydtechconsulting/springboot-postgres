@@ -6,6 +6,7 @@ import java.sql.Statement;
 import java.util.UUID;
 
 import demo.rest.api.CreateItemRequest;
+import demo.rest.api.UpdateItemRequest;
 import demo.util.TestRestData;
 import dev.lydtech.component.framework.client.database.PostgresClient;
 import dev.lydtech.component.framework.client.service.ServiceClient;
@@ -47,13 +48,53 @@ public class EndToEndCT {
         PostgresClient.getInstance().close(dbConnection);
     }
 
+
+    /**
+     * A REST request is POSTed to the v1/item endpoint in order to create a new Item entity.
+     *
+     * The item is then updated to change the name.
+     *
+     * The item is then deleted.
+     */
     @Test
-    public void testCreateAndRetrieveItem() throws Exception {
-        CreateItemRequest request = TestRestData.buildCreateItemRequest(RandomStringUtils.randomAlphabetic(12));
+    public void testItemCRUD() throws Exception {
+
+        // Test the POST endpoint to create an item.
+        CreateItemRequest createRequest = TestRestData.buildCreateItemRequest(RandomStringUtils.randomAlphabetic(1).toUpperCase()+RandomStringUtils.randomAlphabetic(7).toLowerCase()+"1");
+        Response createItemResponse = sendCreateItemRequest(createRequest);
+        String itemId = createItemResponse.header("Location");
+        assertThat(itemId, notNullValue());
+        log.info("Create item response location header: "+itemId);
+
+        // Test the GET endpoint to fetch the item.
+        sendGetItemRequest(itemId, createRequest.getName());
+
+        // Test the PUT endpoint to update the item name.
+        UpdateItemRequest updateRequest = TestRestData.buildUpdateItemRequest(RandomStringUtils.randomAlphabetic(1).toUpperCase()+RandomStringUtils.randomAlphabetic(7).toLowerCase()+"2");
+        sendUpdateRequest(itemId, updateRequest);
+
+        // Ensure the name was updated.
+        sendGetItemRequest(itemId, updateRequest.getName());
+
+        // Query the database directly to demonstrate using the PostgresClient utility class.
+        Statement statement = dbConnection.createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from item where name = '"+updateRequest.getName()+"'");
+        assertThat(resultSet.next(), is(true));
+        UUID result = (UUID)resultSet.getObject("id");
+        assert result != null;
+
+        // Test the DELETE endpoint to delete the item.
+        sendDeleteRequest(itemId);
+
+        // Ensure the deleted item cannot be found.
+        sendGetItemRequest(itemId, HttpStatus.NOT_FOUND);
+    }
+
+    private static Response sendCreateItemRequest(CreateItemRequest createRequest) {
         Response createItemResponse = given()
                 .header("Content-type", "application/json")
                 .and()
-                .body(request)
+                .body(createRequest)
                 .when()
                 .post("/v1/items")
                 .then()
@@ -61,10 +102,35 @@ public class EndToEndCT {
                 .statusCode(HttpStatus.CREATED.value())
                 .extract()
                 .response();
-        String location = createItemResponse.header("Location");
-        assertThat(location, notNullValue());
-        log.info("Create item response location header: "+location);
+        return createItemResponse;
+    }
 
+    private static void sendUpdateRequest(String location, UpdateItemRequest updateRequest) {
+        given()
+                .pathParam("id", location)
+                .header("Content-type", "application/json")
+                .and()
+                .body(updateRequest)
+                .when()
+                .put("/v1/items/{id}")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.NO_CONTENT.value())
+                .extract()
+                .response();
+    }
+
+    private static void sendDeleteRequest(String location) {
+        given()
+                .pathParam("id", location)
+                .when()
+                .delete("/v1/items/{id}")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    private static void sendGetItemRequest(String location, String expectedName) {
         given()
                 .pathParam("id", location)
                 .when()
@@ -73,13 +139,16 @@ public class EndToEndCT {
                 .assertThat()
                 .statusCode(HttpStatus.OK.value())
                 .and()
-                .body("name", containsString(request.getName()));
+                .body("name", containsString(expectedName));
+    }
 
-        // Query the database directly to demonstrate using the PostgresClient utility class.
-        Statement statement = dbConnection.createStatement();
-        ResultSet resultSet = statement.executeQuery("select * from item where name = '"+request.getName()+"'");
-        assertThat(resultSet.next(), is(true));
-        UUID result = (UUID)resultSet.getObject("id");
-        assert result != null;
+    private static void sendGetItemRequest(String location, HttpStatus expectedHttpStatus) {
+        given()
+                .pathParam("id", location)
+                .when()
+                .get("/v1/items/{id}")
+                .then()
+                .assertThat()
+                .statusCode(expectedHttpStatus.value());
     }
 }

@@ -6,6 +6,7 @@ import java.util.UUID;
 import demo.exception.ItemNotFoundException;
 import demo.rest.api.CreateItemRequest;
 import demo.rest.api.GetItemResponse;
+import demo.rest.api.UpdateItemRequest;
 import demo.service.ItemService;
 import demo.util.TestRestData;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -63,6 +64,16 @@ public class ItemControllerTest {
     }
 
     @Test
+    public void testUpdateItem_ServiceThrowsException() {
+        UUID itemId = randomUUID();
+        UpdateItemRequest request = TestRestData.buildUpdateItemRequest(RandomStringUtils.randomAlphabetic(8));
+        doThrow(new RuntimeException("Service failure")).when(serviceMock).updateItem(itemId, request);
+        ResponseEntity response = controller.updateItem(itemId, request);
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
+        verify(serviceMock, times(1)).updateItem(itemId, request);
+    }
+
+    @Test
     public void testGetItem_Success() {
         UUID itemId = randomUUID();
         GetItemResponse getItemResponse = TestRestData.buildGetItemResponse(itemId, "test-item");
@@ -81,5 +92,22 @@ public class ItemControllerTest {
         ResponseEntity<GetItemResponse> response = controller.getItem(itemId);
         assertThat(response.getStatusCode(), equalTo(HttpStatus.NOT_FOUND));
         verify(serviceMock, times(1)).getItem(itemId);
+    }
+
+    @Test
+    public void testDeleteItem_Success() {
+        UUID itemId = randomUUID();
+        ResponseEntity response = controller.deleteItem(itemId);
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.NO_CONTENT));
+        verify(serviceMock, times(1)).deleteItem(itemId);
+    }
+
+    @Test
+    public void testDeleteItem_NotFound() {
+        UUID itemId = randomUUID();
+        doThrow(new ItemNotFoundException()).when(serviceMock).deleteItem(itemId);
+        ResponseEntity response = controller.deleteItem(itemId);
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.NOT_FOUND));
+        verify(serviceMock, times(1)).deleteItem(itemId);
     }
 }

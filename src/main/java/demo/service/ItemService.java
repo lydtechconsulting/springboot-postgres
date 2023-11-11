@@ -8,6 +8,7 @@ import demo.exception.ItemNotFoundException;
 import demo.repository.ItemRepository;
 import demo.rest.api.CreateItemRequest;
 import demo.rest.api.GetItemResponse;
+import demo.rest.api.UpdateItemRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,20 @@ public class ItemService {
         return item.getId();
     }
 
+    public void updateItem(UUID itemId, UpdateItemRequest request) {
+        Optional<Item> itemOpt = itemRepository.findById(itemId);
+        if(itemOpt.isPresent()) {
+            log.info("Found item with id: " + itemId);
+            Item item = itemOpt.get();
+            item.setName(request.getName());
+            itemRepository.save(item);
+            log.info("Item updated with id: {} - name: {}", itemId, request.getName());
+        } else {
+            log.error("Item with id: {} not found.", itemId);
+            throw new ItemNotFoundException();
+        }
+    }
+
     public GetItemResponse getItem(UUID itemId) {
         Optional<Item> itemOpt = itemRepository.findById(itemId);
         GetItemResponse getItemResponse;
@@ -45,5 +60,16 @@ public class ItemService {
             throw new ItemNotFoundException();
         }
         return getItemResponse;
+    }
+
+    public void deleteItem(UUID itemId) {
+        Optional<Item> itemOpt = itemRepository.findById(itemId);
+        if(itemOpt.isPresent()) {
+            itemRepository.delete(itemOpt.get());
+            log.info("Deleted item with id: {}", itemOpt.get().getId());
+        } else {
+            log.error("Item with id: {} not found.", itemId);
+            throw new ItemNotFoundException();
+        }
     }
 }

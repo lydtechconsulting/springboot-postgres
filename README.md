@@ -48,6 +48,31 @@ Date: Sat, 28 Oct 2023 15:19:36 GMT
 {"id":"7c738768-7c29-43f4-bb39-e1638cffe97f","name":"test-item"}
 ```
 
+In a terminal window use curl to submit a PUT REST request to the application to update the item:
+```
+curl -i -X PUT localhost:9001/v1/items/7c738768-7c29-43f4-bb39-e1638cffe97f -H "Content-Type: application/json" -d '{"name": "test-item-update"}'
+```
+
+A response should be returned with the 204 NO CONTENT status code:
+```
+HTTP/1.1 204 
+```
+
+The Spring Boot application should log the successful update of the item:
+```
+Item updated with id: 7c738768-7c29-43f4-bb39-e1638cffe97f - name: test-item-update
+```
+
+Delete the item using curl:
+```
+curl -i -X DELETE localhost:9001/v1/items/7c738768-7c29-43f4-bb39-e1638cffe97f
+```
+
+The Spring Boot application should log the successful deletion of the item:
+```
+Deleted item with id: 7c738768-7c29-43f4-bb39-e1638cffe97f
+```
+
 Stop containers:
 ```
 docker-compose down
