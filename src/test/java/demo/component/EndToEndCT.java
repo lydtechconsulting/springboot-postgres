@@ -10,7 +10,7 @@ import demo.rest.api.UpdateItemRequest;
 import demo.util.TestRestData;
 import dev.lydtech.component.framework.client.database.PostgresClient;
 import dev.lydtech.component.framework.client.service.ServiceClient;
-import dev.lydtech.component.framework.extension.TestContainersSetupExtension;
+import dev.lydtech.component.framework.extension.ComponentTestExtension;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 @Slf4j
-@ExtendWith(TestContainersSetupExtension.class)
+@ExtendWith(ComponentTestExtension.class)
 @ActiveProfiles("component-test")
 public class EndToEndCT {
 
@@ -38,7 +38,6 @@ public class EndToEndCT {
     @BeforeEach
     public void setup() throws Exception {
         String serviceBaseUrl = ServiceClient.getInstance().getBaseUrl();
-        log.info("Service base URL is: {}", serviceBaseUrl);
         RestAssured.baseURI = serviceBaseUrl;
         dbConnection = PostgresClient.getInstance().getConnection("test", "demo", "user", "password");
     }
