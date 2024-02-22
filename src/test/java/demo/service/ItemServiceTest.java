@@ -90,11 +90,12 @@ public class ItemServiceTest {
     @Test
     public void testDeleteItem() {
         UUID itemId = randomUUID();
-        when(itemRepositoryMock.findById(itemId)).thenReturn(Optional.of(TestDomainData.buildItem(itemId, "test-item")));
+        Item item = TestDomainData.buildItem(itemId, "test-item");
+        when(itemRepositoryMock.findById(itemId)).thenReturn(Optional.of(item));
 
         service.deleteItem(itemId);
 
-        verify(itemRepositoryMock, times(1)).findById(itemId);
+        verify(itemRepositoryMock, times(1)).delete(item);
     }
 
     @Test
