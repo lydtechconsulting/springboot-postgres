@@ -6,6 +6,7 @@ import java.util.UUID;
 import demo.exception.ItemNotFoundException;
 import demo.rest.api.CreateItemRequest;
 import demo.rest.api.GetItemResponse;
+import demo.rest.api.GetItemsResponse;
 import demo.rest.api.UpdateItemRequest;
 import demo.service.ItemService;
 import demo.util.TestRestData;
@@ -92,6 +93,18 @@ public class ItemControllerTest {
         ResponseEntity<GetItemResponse> response = controller.getItem(itemId);
         assertThat(response.getStatusCode(), equalTo(HttpStatus.NOT_FOUND));
         verify(serviceMock, times(1)).getItem(itemId);
+    }
+
+    @Test
+    public void testGetItems() {
+        GetItemsResponse getItemsResponse = TestRestData.buildGetItemsResponse();
+        when(serviceMock.getItems()).thenReturn(getItemsResponse);
+        ResponseEntity<GetItemsResponse> response = controller.getItems();
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
+        assertThat(response.getBody().getItemResponses().size(), equalTo(2));
+        assertThat(response.getBody().getItemResponses().get(0).getName(), equalTo("test-item1"));
+        assertThat(response.getBody().getItemResponses().get(1).getName(), equalTo("test-item2"));
+        verify(serviceMock, times(1)).getItems();
     }
 
     @Test

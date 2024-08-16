@@ -1,5 +1,6 @@
 package demo.service;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -8,6 +9,7 @@ import demo.exception.ItemNotFoundException;
 import demo.repository.ItemRepository;
 import demo.rest.api.CreateItemRequest;
 import demo.rest.api.GetItemResponse;
+import demo.rest.api.GetItemsResponse;
 import demo.rest.api.UpdateItemRequest;
 import demo.util.TestDomainData;
 import demo.util.TestRestData;
@@ -85,6 +87,18 @@ public class ItemServiceTest {
         UUID itemId = randomUUID();
         when(itemRepositoryMock.findById(itemId)).thenReturn(Optional.empty());
         assertThrows(ItemNotFoundException.class, () -> service.getItem(itemId));
+    }
+
+    @Test
+    public void testGetItems() {
+        when(itemRepositoryMock.findAll()).thenReturn(Arrays.asList(TestDomainData.buildItem(randomUUID(), "test-item"), TestDomainData.buildItem(randomUUID(), "test-item2")));
+
+        GetItemsResponse items = service.getItems();
+
+        assertThat(items.getItemResponses().size(), equalTo(2));
+        assertThat(items.getItemResponses().get(0).getName(), equalTo("test-item"));
+        assertThat(items.getItemResponses().get(1).getName(), equalTo("test-item2"));
+        verify(itemRepositoryMock, times(1)).findAll();
     }
 
     @Test

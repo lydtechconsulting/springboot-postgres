@@ -6,6 +6,7 @@ import java.util.UUID;
 import demo.exception.ItemNotFoundException;
 import demo.rest.api.CreateItemRequest;
 import demo.rest.api.GetItemResponse;
+import demo.rest.api.GetItemsResponse;
 import demo.rest.api.UpdateItemRequest;
 import demo.service.ItemService;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +66,13 @@ public class ItemController {
         } catch(ItemNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping()
+    public ResponseEntity<GetItemsResponse> getItems() {
+        log.info("Retrieving items");
+        GetItemsResponse response = itemService.getItems();
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{itemId}")

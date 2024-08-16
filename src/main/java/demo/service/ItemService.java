@@ -1,13 +1,16 @@
 package demo.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import demo.domain.Item;
 import demo.exception.ItemNotFoundException;
 import demo.repository.ItemRepository;
 import demo.rest.api.CreateItemRequest;
 import demo.rest.api.GetItemResponse;
+import demo.rest.api.GetItemsResponse;
 import demo.rest.api.UpdateItemRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +65,17 @@ public class ItemService {
             throw new ItemNotFoundException();
         }
         return getItemResponse;
+    }
+
+    public GetItemsResponse getItems() {
+        List<Item> items = itemRepository.findAll();
+        List<GetItemResponse> itemResponses = items.stream()
+                .map(item -> GetItemResponse.builder()
+                        .id(item.getId())
+                        .name(item.getName())
+                        .build())
+                .collect(Collectors.toList());
+        return GetItemsResponse.builder().itemResponses(itemResponses).build();
     }
 
     public void deleteItem(UUID itemId) {
