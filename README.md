@@ -2,6 +2,12 @@
 
 Spring Boot application demonstrating using Postgres as the datatabase for reading and writing records.
 
+The application stores the created entity in memory.
+
+![Spring Boot application with Postgres database](springboot-postgres.png)
+
+## Running The Demo
+
 Build Spring Boot application with Java 17:
 ```
 mvn clean install
@@ -86,6 +92,8 @@ docker-compose down
 ## Component Tests
 
 The test demonstrates the application reading and writing records to Postgres.
+
+![Component testing the Spring Boot application](springboot-postgres-component-test.png)
 
 For more on the component tests see: https://github.com/lydtechconsulting/component-test-framework
 
